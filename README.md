@@ -14,6 +14,29 @@ Configure these repository secrets before running it:
 `ITMATT_URL`, `PREDES_URL`, `API_KEY`, `MOAS_URL`, `MOAS_USER`, and
 `MOAS_PASSWORD`.
 
+When a workflow run finishes, download the `nightly-test-reports` artifact from
+the run summary. It contains the generated Allure report, Playwright report,
+screenshots, videos, and traces.
+
+Allure reports must be served over HTTP; opening `allure-report/index.html`
+directly from a `file://` URL causes `500 Failed to fetch` errors. After
+extracting the artifact, run:
+
+```bash
+allure open allure-report
+```
+
+The workflow generates the Allure report in an `always()` step, so it is
+generated and uploaded even when Playwright tests fail or setup fails.
+
+The same report is also published to GitHub Pages after each workflow run:
+
+<https://sabirshaikh-postnl.github.io/cbs-customs-platform/>
+
+Enable GitHub Pages once in the repository settings by selecting **GitHub
+Actions** as the source. The Pages deployment runs even when the test job
+fails, provided the workflow reaches the report-generation steps.
+
 ## Prerequisites
 
 - Node.js 18 or newer
