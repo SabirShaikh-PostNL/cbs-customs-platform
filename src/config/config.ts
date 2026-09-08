@@ -12,7 +12,6 @@ function required(name: string): string {
 
 export function getConfig() {
   return {
-    appBaseUrl: required('APP_BASE_URL'),
     itmattUrl: required('ITMATT_URL'),
     predesUrl: required('PREDES_URL'),
     apiKey: required('API_KEY'),

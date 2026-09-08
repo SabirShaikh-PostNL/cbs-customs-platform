@@ -11,8 +11,8 @@ artifact, including when tests fail.
 
 Configure these repository secrets before running it:
 
-`APP_BASE_URL`, `ITMATT_URL`, `PREDES_URL`, `API_KEY`, `MOAS_URL`, `MOAS_USER`,
-and `MOAS_PASSWORD`.
+`ITMATT_URL`, `PREDES_URL`, `API_KEY`, `MOAS_URL`, `MOAS_USER`, and
+`MOAS_PASSWORD`.
 
 ## Prerequisites
 
@@ -33,7 +33,6 @@ Chromium is installed automatically by the `postinstall` script. The `pretest` s
 Copy `.env.example` to `.env` and fill in environment-specific values:
 
 ```env
-APP_BASE_URL=https://your-application-host
 ITMATT_URL=https://your-itmatt-endpoint
 PREDES_URL=https://your-predes-endpoint
 API_KEY=replace-with-api-key

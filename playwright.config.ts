@@ -30,7 +30,6 @@ export default defineConfig({
     ['allure-playwright', { outputFolder: 'allure-results' }],
   ],
   use: {
-    baseURL: config.appBaseUrl,
     trace: config.traceOnFailure ? 'on' : 'off',
     screenshot: config.screenshotOnFailure ? 'on' : 'off',
     video: config.videoOnFailure,

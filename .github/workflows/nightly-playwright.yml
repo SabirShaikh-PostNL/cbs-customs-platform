@@ -12,7 +12,6 @@ jobs:
     timeout-minutes: 30
 
     env:
-      APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
       ITMATT_URL: ${{ secrets.ITMATT_URL }}
       PREDES_URL: ${{ secrets.PREDES_URL }}
       API_KEY: ${{ secrets.API_KEY }}

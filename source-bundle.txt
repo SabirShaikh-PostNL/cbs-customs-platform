@@ -179,7 +179,6 @@ import 'dotenv/config';
 
 export function getConfig() {
   return {
-    appBaseUrl: process.env.APP_BASE_URL!,
     itmattUrl: process.env.ITMATT_URL!,
     apiKey: process.env.API_KEY!,
 
