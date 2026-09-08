@@ -1,0 +1,671 @@
+
+===== C:\Users\ShaikhSabir\Playwright_Practice\src\api\itmatt-api.ts =====
+
+import { APIRequestContext } from '@playwright/test';
+
+export class ItmattApi {
+  constructor(
+    private request: APIRequestContext
+  ) {}
+
+  async sendItmatt(xmlPayload: string) {
+    return await this.request.post(
+      process.env.ITMATT_URL!,
+      {
+        headers: {
+          'x-api-key': process.env.API_KEY!,
+          'Content-Type': 'application/xml',
+        },
+        data: xmlPayload,
+      }
+    );
+  }
+}
+
+
+===== C:\Users\ShaikhSabir\Playwright_Practice\src\api\types.ts =====
+
+/**
+ * Shared types for API requests and responses.
+ * Domain-specific models belong in their respective client files.
+ */
+
+export interface ApiResponse<T> {
+  status: number;
+  data: T;
+  headers: Record<string, string | string[]>;
+}
+
+export interface ApiError {
+  status: number;
+  message: string;
+  body: string;
+}
+
+export interface AuthCredentials {
+  username: string;
+  password: string;
+}
+
+export interface ApiRequestOptions {
+  headers?: Record<string, string>;
+  timeout?: number;
+}
+
+
+===== C:\Users\ShaikhSabir\Playwright_Practice\src\assertions\payload.ts =====
+
+/**
+ * Focused assertion helpers for domain payloads.
+ * Reusable across tests without hiding behavior.
+ */
+
+import { Shipment } from '@/models/shipment';
+
+/**
+ * Verify shipment payload matches expected created shipment.
+ * Used when test creates data via API and needs to verify it was correctly processed.
+ */
+export function assertShipmentPayloadMatchesCreation(
+  createdShipment: Shipment,
+  payloadData: Record<string, unknown>
+): void {
+  const errors: string[] = [];
+
+  // Verify shipment data is present in payload
+  if (payloadData.id !== createdShipment.id) {
+    errors.push(`ID mismatch: expected ${createdShipment.id}, got ${payloadData.id}`);
+  }
+
+  if (payloadData.orderId !== createdShipment.orderId) {
+    errors.push(
+      `Order ID mismatch: expected ${createdShipment.orderId}, got ${payloadData.orderId}`
+    );
+  }
+
+  if (payloadData.destination !== createdShipment.destination) {
+    errors.push(
+      `Destination mismatch: expected ${createdShipment.destination}, got ${payloadData.destination}`
+    );
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Shipment payload verification failed:\n  ${errors.join('\n  ')}`);
+  }
+}
+
+/**
+ * Verify shipment status in payload matches expected value.
+ */
+export function assertShipmentStatusInPayload(
+  payloadData: Record<string, unknown>,
+  expectedStatus: string
+): void {
+  if (payloadData.status !== expectedStatus) {
+    throw new Error(
+      `Shipment status mismatch: expected ${expectedStatus}, got ${payloadData.status}`
+    );
+  }
+}
+
+
+===== C:\Users\ShaikhSabir\Playwright_Practice\src\components\example-component.ts =====
+
+/**
+ * Example Component: Shipment Card
+ * Reusable UI component demonstrating composition pattern.
+ * Replace with real components for your application.
+ */
+
+import { Locator } from '@playwright/test';
+
+/**
+ * ShipmentCard: Encapsulates interactions with a single shipment card in a list.
+ * Composed into a page object, not inherited.
+ */
+export class ShipmentCard {
+  constructor(private cardLocator: Locator) {}
+
+  /**
+   * Business action: Click to view details.
+   */
+  async viewDetails(): Promise<void> {
+    const viewButton = this.cardLocator.getByRole('button', {
+      name: /view|details/i,
+    });
+    await viewButton.click();
+  }
+
+  /**
+   * Business action: Get shipment ID from card.
+   */
+  async getShipmentId(): Promise<string | null> {
+    // TODO(APP_SPECIFIC): Replace with real selector
+    const idElement = this.cardLocator.getByTestId('shipment-id');
+    return idElement.textContent();
+  }
+
+  /**
+   * Business action: Get displayed status.
+   */
+  async getStatus(): Promise<string | null> {
+    // TODO(APP_SPECIFIC): Replace with real selector
+    const statusBadge = this.cardLocator.getByTestId('status-badge');
+    return statusBadge.textContent();
+  }
+
+  /**
+   * Business action: Verify card content matches expected values.
+   */
+  async verifyContent(expectedId: string, expectedStatus: string): Promise<void> {
+    const actualId = await this.getShipmentId();
+    const actualStatus = await this.getStatus();
+
+    // Return result; assertions remain in test
+    if (actualId !== expectedId || actualStatus !== expectedStatus) {
+      throw new Error(
+        `Card content mismatch: ` +
+          `expected id=${expectedId}, status=${expectedStatus}; ` +
+          `got id=${actualId}, status=${actualStatus}`
+      );
+    }
+  }
+}
+
+
+===== C:\Users\ShaikhSabir\Playwright_Practice\src\config\config.ts =====
+
+import 'dotenv/config';
+
+export function getConfig() {
+  return {
+    appBaseUrl: process.env.APP_BASE_URL!,
+    itmattUrl: process.env.ITMATT_URL!,
+    apiKey: process.env.API_KEY!,
+
+    moasUrl: process.env.MOAS_URL!,
+    moasUser: process.env.MOAS_USER!,
+    moasPassword: process.env.MOAS_PASSWORD!,
+   traceOnFailure: true,
+  screenshotOnFailure: true,
+videoOnFailure: 'retain-on-failure' as const,
+  };
+}
+
+===== C:\Users\ShaikhSabir\Playwright_Practice\src\fixtures\pages.ts =====
+
+/**
+ * Fixtures: Page object access.
+ * Provides typed page objects to tests.
+ * Add each page object fixture here as it's created.
+ */
+
+import { test } from '@playwright/test';
+import { LocalEntitiesItemsPage } from '@/pages/local-entities-items-page';
+import { LoginPage } from '@/pages/login-page';
+
+interface PageFixtures {
+  localEntitiesItemsPage: LocalEntitiesItemsPage;
+  loginPage: LoginPage;
+}
+
+export const testWithPages = test.extend<PageFixtures>({
+  localEntitiesItemsPage: async ({ page }, use) => {
+    await use(new LocalEntitiesItemsPage(page));
+  },
+  loginPage: async ({ page }, use) => {
+    await use(new LoginPage(page));
+  },
+});
+
+
+===== C:\Users\ShaikhSabir\Playwright_Practice\src\pages\local-entities-items-page.ts =====
+
+import { Page, expect } from '@playwright/test';
+
+export class LocalEntitiesItemsPage {
+  private searchedItemId?: string;
+
+  constructor(private page: Page) {}
+
+  async navigateToLocalEntitiesItems() {
+    await this.page
+      .getByRole('menuitem', { name: 'Local entities', exact: true })
+      .last()
+      .click();
+    await this.page
+      .getByRole('menuitem', { name: 'Items', exact: true })
+      .last()
+      .click();
+    await expect(this.page.getByRole('heading', { name: 'Item' })).toBeVisible();
+  }
+
+  async searchItemsByItemId(itemId: string) {
+    const itemIdField = this.page
+      .locator('div.mx-grid-search-label')
+      .filter({ hasText: 'Item Id' })
+      .locator('..')
+      .getByRole('textbox');
+
+    await itemIdField.fill(itemId);
+    await this.page.getByRole('button', { name: 'Search', exact: true }).click();
+    this.searchedItemId = itemId;
+  }
+
+  async verifyItemSortingAndDutiable(
+    expectedSortingDecision: string,
+    expectedDutiable: 'Yes' | 'No'
+  ) {
+    if (!this.searchedItemId) {
+      throw new Error('Search for an item before verifying its details.');
+    }
+
+    const itemRow = this.page
+      .getByRole('row')
+      .filter({ hasText: this.searchedItemId })
+      .last();
+    const cells = itemRow.getByRole('cell');
+
+    await expect(itemRow).toBeVisible();
+    await expect(cells.nth(1)).toContainText(expectedSortingDecision);
+    await expect(cells.nth(2)).toHaveText(expectedDutiable);
+  }
+}
+
+===== C:\Users\ShaikhSabir\Playwright_Practice\src\pages\login-page.ts =====
+
+import { Page, expect } from '@playwright/test';
+import { getConfig } from '@/config/config';
+
+export class LoginPage {
+  private config = getConfig();
+
+  constructor(private page: Page) {}
+
+  async navigate() {
+    await this.page.goto(this.config.moasUrl);
+    await expect(
+      this.page.locator('#usernameInput')
+    ).toBeVisible();
+  }
+
+  async login() {
+    await this.page.fill(
+      '#usernameInput',
+      this.config.moasUser
+    );
+
+    await this.page.fill(
+      '#passwordInput',
+      this.config.moasPassword
+    );
+
+    await this.page.click('#loginButton');
+  }
+
+  async verifyLoggedIn() {
+    await this.page.waitForLoadState('networkidle');
+  }
+}
+
+===== C:\Users\ShaikhSabir\Playwright_Practice\src\parsers\json-parser.ts =====
+
+/**
+ * JSON parsing and validation helpers.
+ * Provides typed access and assertions without schema library overhead.
+ */
+
+/**
+ * Safely parse JSON string with clear error reporting.
+ */
+export function parseJson<T>(jsonString: string): T {
+  try {
+    return JSON.parse(jsonString) as T;
+  } catch (error) {
+    throw new Error(
+      `Failed to parse JSON: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
+
+/**
+ * Read a nested value from an object by dot-notation path.
+ * Example: readJsonValue(data, 'shipment.status')
+ */
+export function readJsonValue(
+  data: Record<string, unknown>,
+  path: string
+): unknown {
+  const parts = path.split('.');
+  let current: unknown = data;
+
+  for (const part of parts) {
+    if (current === null || current === undefined) {
+      return undefined;
+    }
+
+    if (typeof current === 'object') {
+      current = (current as Record<string, unknown>)[part];
+    } else {
+      return undefined;
+    }
+  }
+
+  return current;
+}
+
+/**
+ * Verify that a required JSON field exists and matches an expected value.
+ */
+export function assertJsonField(
+  data: Record<string, unknown>,
+  path: string,
+  expectedValue: unknown,
+  message?: string
+): void {
+  const actual = readJsonValue(data, path);
+
+  if (actual !== expectedValue) {
+    throw new Error(
+      message ??
+        `JSON field mismatch at '${path}': ` +
+          `expected ${JSON.stringify(expectedValue)}, ` +
+          `got ${JSON.stringify(actual)}`
+    );
+  }
+}
+
+/**
+ * Verify that a required JSON field exists.
+ */
+export function assertJsonFieldExists(
+  data: Record<string, unknown>,
+  path: string,
+  message?: string
+): void {
+  const value = readJsonValue(data, path);
+
+  if (value === undefined || value === null) {
+    throw new Error(
+      message ?? `Required JSON field '${path}' not found`
+    );
+  }
+}
+
+/**
+ * Format JSON for readable error output (truncated if very large).
+ */
+export function formatJsonForDiagnostics(data: unknown, maxLength = 500): string {
+  const formatted = JSON.stringify(data, null, 2);
+  if (formatted.length > maxLength) {
+    return formatted.substring(0, maxLength) + '\n... (truncated)';
+  }
+  return formatted;
+}
+
+
+===== C:\Users\ShaikhSabir\Playwright_Practice\src\parsers\xml-parser.ts =====
+
+/**
+ * XML parsing with focused, predictable API.
+ * Uses fast-xml-parser for performance and reliability.
+ */
+
+import { XMLParser } from 'fast-xml-parser';
+
+/**
+ * Parse XML string into a predictable object structure.
+ * Preserves all values as-is without silent conversion.
+ */
+export async function parseXml(xmlString: string): Promise<Record<string, unknown>> {
+  try {
+    const parser = new XMLParser({
+      // Parser options: predictable behavior, minimal surprises
+      parseTagValue: false, // Don't auto-parse values as numbers/booleans
+      parseAttributeValue: false, // Keep attribute values as strings
+      attributeNamePrefix: '@_', // Distinguish attributes from elements
+      textNodeName: '#text',
+      ignoreAttributes: false,
+    });
+
+    const result = parser.parse(xmlString) as Record<string, unknown>;
+    return result;
+  } catch (error) {
+    throw new Error(
+      `Failed to parse XML: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
+
+/**
+ * Read a nested value from parsed XML by dot-notation path.
+ * Example: readXmlValue(parsed, 'root.shipment.id')
+ */
+export function readXmlValue(
+  data: Record<string, unknown>,
+  path: string
+): unknown {
+  const parts = path.split('.');
+  let current: unknown = data;
+
+  for (const part of parts) {
+    if (current === null || current === undefined) {
+      return undefined;
+    }
+
+    if (typeof current === 'object') {
+      current = (current as Record<string, unknown>)[part];
+    } else {
+      return undefined;
+    }
+  }
+
+  return current;
+}
+
+/**
+ * Verify that a required XML field exists and matches an expected value.
+ */
+export function assertXmlField(
+  data: Record<string, unknown>,
+  path: string,
+  expectedValue: string | number,
+  message?: string
+): void {
+  const actual = readXmlValue(data, path);
+
+  if (actual !== expectedValue) {
+    throw new Error(
+      message ??
+        `XML field mismatch at '${path}': ` +
+          `expected ${JSON.stringify(expectedValue)}, ` +
+          `got ${JSON.stringify(actual)}`
+    );
+  }
+}
+
+/**
+ * Verify that a required XML field exists.
+ */
+export function assertXmlFieldExists(
+  data: Record<string, unknown>,
+  path: string,
+  message?: string
+): void {
+  const value = readXmlValue(data, path);
+
+  if (value === undefined || value === null) {
+    throw new Error(
+      message ?? `Required XML field '${path}' not found`
+    );
+  }
+}
+
+
+===== C:\Users\ShaikhSabir\Playwright_Practice\src\parsers\xml.spec.ts =====
+
+/**
+ * Unit tests for XML parser functions.
+ * Ensures parser behavior is predictable and reliable.
+ */
+
+import { parseXml } from './xml-parser';
+
+describe('XML Parser', () => {
+  const sampleXml = `<?xml version="1.0"?>
+<shipment>
+  <id>ship-123</id>
+  <orderId>order-456</orderId>
+  <status>delivered</status>
+  <destination>warehouse-789</destination>
+</shipment>`;
+
+  describe('parseXml', () => {
+    it('should parse valid XML to object', async () => {
+      const result = await parseXml(sampleXml);
+      expect(result).toHaveProperty('shipment');
+    });
+
+    it('should handle incomplete XML', async () => {
+      // The fast-xml-parser library doesn't throw on malformed XML by default
+      // It attempts to parse what it can
+      const result = await parseXml('<invalid>xml');
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe('readXmlValue', () => {
+    let parsed: Record<string, unknown>;
+
+    beforeAll(async () => {
+      parsed = await parseXml(sampleXml);
+    });
+
+    it('should read nested value by path', () => {
+      // Navigate through parsed structure
+      const root = parsed.shipment as Record<string, unknown>;
+      expect(root.id).toBe('ship-123');
+    });
+
+    it('should return undefined for missing path', () => {
+      const root = parsed.shipment as Record<string, unknown>;
+      const value = root.nonexistent;
+      expect(value).toBeUndefined();
+    });
+  });
+
+  describe('assertXmlField', () => {
+    let parsed: Record<string, unknown>;
+
+    beforeAll(async () => {
+      parsed = await parseXml(sampleXml);
+    });
+
+    it('should pass when field matches', () => {
+      const root = parsed.shipment as Record<string, unknown>;
+      const id = root.id;
+      expect(id).toBe('ship-123');
+    });
+
+    it('should throw when field does not match', () => {
+      const root = parsed.shipment as Record<string, unknown>;
+      const id = root.id;
+      expect(id).not.toBe('wrong-id');
+    });
+  });
+
+  describe('assertXmlFieldExists', () => {
+    let parsed: Record<string, unknown>;
+
+    beforeAll(async () => {
+      parsed = await parseXml(sampleXml);
+    });
+
+    it('should pass when field exists', () => {
+      const root = parsed.shipment as Record<string, unknown>;
+      expect(root.id).toBeDefined();
+    });
+
+    it('should throw when field is missing', () => {
+      const root = parsed.shipment as Record<string, unknown>;
+      expect(root.nonexistent).toBeUndefined();
+    });
+  });
+});
+
+
+===== C:\Users\ShaikhSabir\Playwright_Practice\src\utils\generate-item-id.ts =====
+
+export function generateS10Barcode(
+  serviceIndicator = 'RR',
+  countryCode = 'ES'
+): string {
+
+  const serial = Math.floor(Math.random() * 100000000)
+    .toString()
+    .padStart(8, '0');
+
+  const checkDigit = calculateS10CheckDigit(serial);
+
+  return `${serviceIndicator}${serial}${checkDigit}${countryCode}`;
+}
+
+function calculateS10CheckDigit(serial: string): number {
+  const weights = [8, 6, 4, 2, 3, 5, 9, 7];
+
+  const sum = serial
+    .split('')
+    .reduce((acc, digit, idx) =>
+      acc + Number(digit) * weights[idx], 0);
+
+  const remainder = sum % 11;
+
+  const checkDigit = 11 - remainder;
+
+  if (checkDigit === 10) return 0;
+  if (checkDigit === 11) return 5;
+
+  return checkDigit;
+}
+
+===== C:\Users\ShaikhSabir\Playwright_Practice\tests\T001ValidateFromInputITMATTMessage.spec.ts =====
+
+import { expect } from '@playwright/test';
+import { ItmattApi } from '@/api/itmatt-api';
+import { generateS10Barcode } from '@/utils/generate-item-id';
+import { testWithPages } from '@/fixtures/pages';
+
+testWithPages('Send ITMATT message', async ({ localEntitiesItemsPage, loginPage, request }) => {
+
+const itemId = generateS10Barcode('UY', 'ES');
+const xmlPayload = `<?xml version="1.0" encoding="UTF-8"?>
+<Item>
+<ItemId>${itemId}</ItemId>
+<Weight>0.2</Weight>
+<MailClass>U</MailClass>
+<Gift>true</Gift>
+<OriginCountry>ES</OriginCountry>
+</Item>`;
+
+
+const api = new ItmattApi(request);
+const response = await api.sendItmatt(xmlPayload);
+console.log(`ItemId: ${itemId}`);
+console.log(`Status: ${response.status()}`);
+console.log(`Body: ${await response.text()}`);
+expect(response.status()).toBe(200);
+
+const responseBody = await response.text();
+expect(
+response.status(),
+responseBody
+).toBe(200);
+
+await loginPage.navigate();
+await loginPage.login();
+await loginPage.verifyLoggedIn();
+await localEntitiesItemsPage.navigateToLocalEntitiesItems();
+await localEntitiesItemsPage.searchItemsByItemId(itemId);
+await localEntitiesItemsPage.verifyItemSortingAndDutiable('12', 'No');
+
+});

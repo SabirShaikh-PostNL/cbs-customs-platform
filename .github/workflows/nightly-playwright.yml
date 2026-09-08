@@ -1,0 +1,54 @@
+name: Nightly Playwright tests
+
+on:
+  schedule:
+    # 23:00 UTC is 00:00/01:00 in Europe/Amsterdam depending on DST.
+    - cron: '0 23 * * *'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+      ITMATT_URL: ${{ secrets.ITMATT_URL }}
+      PREDES_URL: ${{ secrets.PREDES_URL }}
+      API_KEY: ${{ secrets.API_KEY }}
+      MOAS_URL: ${{ secrets.MOAS_URL }}
+      MOAS_USER: ${{ secrets.MOAS_USER }}
+      MOAS_PASSWORD: ${{ secrets.MOAS_PASSWORD }}
+      VIDEO_ON_FAILURE: retain-on-failure
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        run: npm run bddgen && npx playwright test
+
+      - name: Upload Playwright and Allure artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-test-reports
+          path: |
+            allure-report/
+            allure-results/
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+          retention-days: 14
