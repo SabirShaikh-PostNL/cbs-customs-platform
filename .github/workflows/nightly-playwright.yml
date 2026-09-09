@@ -63,6 +63,32 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+      - name: Package Allure report for email
+        if: always()
+        run: zip -rq allure-report.zip allure-report
+
+      - name: Email Allure report
+        if: always()
+        continue-on-error: true
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.office365.com
+          server_port: 587
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          secure: false
+          to: sabir.shaikh@postnl.nl
+          from: Nightly Playwright tests <${{ secrets.SMTP_USERNAME }}>
+          subject: Nightly Playwright report - ${{ steps.tests.outcome }}
+          body: |
+            The nightly Playwright test run has completed with status: ${{ steps.tests.outcome }}.
+
+            Open the GitHub Actions run to view or download the complete reports:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            The Allure report is attached as a ZIP archive.
+          attachments: allure-report.zip
+
       - name: Fail if tests failed
         if: steps.tests.outcome == 'failure'
         run: exit 1
