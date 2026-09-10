@@ -23,6 +23,12 @@ interface PageFixtures {
 export interface MessageContext {
   itemId?: string;
   itmattItemId?: string;
+  itmattData?: Record<string, string>;
+  blacklistedAddress?: {
+    name: string;
+    company: string;
+    senderOrReceiver: 'Sender' | 'Receiver';
+  };
   predesItemIds?: string[];
   responseStatus?: number;
   responseBody?: string;
