@@ -1,6 +1,8 @@
 import { expect, Page } from '@playwright/test';
+import { MoasNavigation } from '@/pages/moas-navigation';
 
 export class SpecialsCriteriaPage {
+  private navigation: MoasNavigation;
   private createdCriterion?: string;
   private createdKeyword?: string;
   private createdAddress?: {
@@ -9,15 +11,13 @@ export class SpecialsCriteriaPage {
     senderOrReceiver: 'Sender' | 'Receiver';
   };
 
-  constructor(private page: Page) {}
+  constructor(private page: Page) {
+    this.navigation = new MoasNavigation(page);
+  }
 
   async navigateToSpecialsCriteria() {
-    await this.page.getByRole('menuitem', { name: 'Settings', exact: true }).last().click();
-
-    await this.page
-      .getByRole('menuitem', { name: 'Specials Criteria', exact: true })
-      .last()
-      .click();
+    await this.navigation.navigateToMenuItem('Settings');
+    await this.navigation.navigateToMenuItem('Specials Criteria');
 
     await expect(this.page.getByText("Criteria for 'Special goods'")).toBeVisible();
   }

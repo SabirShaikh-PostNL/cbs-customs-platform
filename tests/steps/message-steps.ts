@@ -162,6 +162,13 @@ Then(
   }
 );
 
+Then(
+  'the item has sorting decision {string}',
+  async ({ localEntitiesItemsPage }, sortingDecision: string) => {
+    await localEntitiesItemsPage.verifyItemSorting(sortingDecision);
+  }
+);
+
 When(
   'I search for the generated item in Processed requests',
   async ({ messageContext, processedRequestsPage }) => {
@@ -170,6 +177,41 @@ When(
     }
     await processedRequestsPage.navigateToProcessedRequests();
     await processedRequestsPage.searchByPayload(messageContext.itemId);
+  }
+);
+
+When(
+  'I search for the generated item in Messages sent to eMagiz',
+  async ({ messageContext, messagesSentToEmagizPage }) => {
+    if (!messageContext.itemId) {
+      throw new Error('No generated item is available for this scenario.');
+    }
+    await messagesSentToEmagizPage.navigateToMessagesSentToEmagiz();
+    await messagesSentToEmagizPage.searchByItemId(messageContext.itemId);
+  }
+);
+
+Then(
+  'the generated item has messages in Messages sent to eMagiz:',
+  async ({ messageContext, messagesSentToEmagizPage }, table: DataTable) => {
+    if (!messageContext.itemId) {
+      throw new Error('No generated item is available for this scenario.');
+    }
+    await messagesSentToEmagizPage.verifyMessages(messageContext.itemId, table.hashes());
+  }
+);
+
+Then(
+  'the eMagiz payload for target {string} matches:',
+  async ({ messageContext, messagesSentToEmagizPage }, target: string, table: DataTable) => {
+    if (!messageContext.itemId) {
+      throw new Error('No generated item is available for this scenario.');
+    }
+    const assertions = table.hashes().map(row => ({
+      jsonPath: row['JSON path'],
+      expectedValue: row['Expected value'],
+    }));
+    await messagesSentToEmagizPage.verifyPayload(target, messageContext.itemId, assertions);
   }
 );
 

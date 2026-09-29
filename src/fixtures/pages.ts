@@ -6,14 +6,18 @@
 
 import { TestInfo } from '@playwright/test';
 import { test } from 'playwright-bdd';
+import { DataCompletionPage } from '@/pages/data-completion-page';
 import { LocalEntitiesItemsPage } from '@/pages/local-entities-items-page';
 import { LoginPage } from '@/pages/login-page';
+import { MessagesSentToEmagizPage } from '@/pages/messages-sent-to-emagiz-page';
 import { ProcessedRequestsPage } from '@/pages/processed-requests-page';
 import { SpecialsCriteriaPage } from '@/pages/specials-criteria-page';
 
 interface PageFixtures {
+  dataCompletionPage: DataCompletionPage;
   localEntitiesItemsPage: LocalEntitiesItemsPage;
   loginPage: LoginPage;
+  messagesSentToEmagizPage: MessagesSentToEmagizPage;
   processedRequestsPage: ProcessedRequestsPage;
   specialsCriteriaPage: SpecialsCriteriaPage;
   messageContext: MessageContext;
@@ -35,11 +39,17 @@ export interface MessageContext {
 }
 
 export const testWithPages = test.extend<PageFixtures>({
+  dataCompletionPage: async ({ page }, use) => {
+    await use(new DataCompletionPage(page));
+  },
   localEntitiesItemsPage: async ({ page }, use) => {
     await use(new LocalEntitiesItemsPage(page));
   },
   loginPage: async ({ page }, use) => {
     await use(new LoginPage(page));
+  },
+  messagesSentToEmagizPage: async ({ page }, use) => {
+    await use(new MessagesSentToEmagizPage(page));
   },
   processedRequestsPage: async ({ page }, use) => {
     await use(new ProcessedRequestsPage(page));

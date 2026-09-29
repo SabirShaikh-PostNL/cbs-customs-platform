@@ -47,4 +47,18 @@ export class LocalEntitiesItemsPage {
     await expect(cells.nth(1)).toContainText(expectedSortingDecision);
     await expect(cells.nth(2)).toHaveText(expectedDutiable);
   }
+
+  async verifyItemSorting(expectedSortingDecision: string) {
+    if (!this.searchedItemId) {
+      throw new Error('Search for an item before verifying its details.');
+    }
+
+    const itemRow = this.page
+      .getByRole('row')
+      .filter({ hasText: this.searchedItemId })
+      .last();
+
+    await expect(itemRow).toBeVisible();
+    await expect(itemRow.getByRole('cell').nth(1)).toContainText(expectedSortingDecision);
+  }
 }
