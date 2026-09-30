@@ -38,6 +38,13 @@ When('I mark the item as {string}', async ({ dataCompletionPage }, action: strin
 });
 
 When(
+  'I provide BVA reason as {string}',
+  async ({ dataCompletionPage }, reason: string) => {
+    await dataCompletionPage.fillBvaReason(reason);
+  }
+);
+
+When(
   'I click on the {string} button',
   async ({ dataCompletionPage }, buttonName: string) => {
     await dataCompletionPage.clickActionButton(buttonName);

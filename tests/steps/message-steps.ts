@@ -208,7 +208,7 @@ Then(
       throw new Error('No generated item is available for this scenario.');
     }
     const assertions = table.hashes().map(row => ({
-      jsonPath: row['JSON path'],
+      path: row['JSON path'] ?? row['XPath'],
       expectedValue: row['Expected value'],
     }));
     await messagesSentToEmagizPage.verifyPayload(target, messageContext.itemId, assertions);

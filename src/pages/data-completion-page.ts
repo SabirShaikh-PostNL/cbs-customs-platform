@@ -54,8 +54,17 @@ export class DataCompletionPage {
     await receiverAddress.getByLabel('Country', { exact: true }).fill(country);
   }
 
+  async fillBvaReason(reason: string) {
+    await this.page.getByLabel('BVA reason', { exact: true }).fill(reason);
+  }
+
   async selectItemAction(action: string) {
-    const actionSelect = this.page.getByRole('combobox').last();
+    const actionSelect = this.page
+      .locator('select')
+      .filter({ has: this.page.locator('option', { hasText: action }) })
+      .first();
+
+    await expect(actionSelect).toBeVisible({ timeout: 15000 });
     await actionSelect.selectOption({ label: action });
     await expect(actionSelect).toHaveValue(/.+/);
   }

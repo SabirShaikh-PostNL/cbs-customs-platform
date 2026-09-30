@@ -2,6 +2,51 @@ import { Page, expect } from '@playwright/test';
 import { MoasNavigation } from '@/pages/moas-navigation';
 import { getJsonPathValue } from '@/utils/json-path';
 
+function normalizeScalar(value: unknown): unknown {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const trimmed = value.trim();
+  if (trimmed === '') {
+    return '';
+  }
+  if (trimmed === 'true') {
+    return true;
+  }
+  if (trimmed === 'false') {
+    return false;
+  }
+  if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+    return Number(trimmed);
+  }
+  return trimmed;
+}
+
+function getXmlValue(xmlText: string, xmlPath: string): unknown {
+  const normalizedPath = xmlPath.trim();
+  const segments = normalizedPath.replace(/^\/+/, '').split('/').filter(Boolean);
+  if (segments.length === 0) {
+    return undefined;
+  }
+
+  let currentText = xmlText;
+  for (const segment of segments) {
+    const match = new RegExp(`<${segment}>([\\s\\S]*?)<\\/${segment}>`, 'i').exec(currentText);
+    if (!match) {
+      const fallback = new RegExp(`<${segment}>([\\s\\S]*?)<\\/${segment}>`, 'i').exec(xmlText);
+      if (!fallback) {
+        return undefined;
+      }
+      currentText = fallback[1];
+      continue;
+    }
+    currentText = match[1];
+  }
+
+  return normalizeScalar(currentText.trim());
+}
+
 export class MessagesSentToEmagizPage {
   private navigation: MoasNavigation;
 
@@ -65,7 +110,7 @@ export class MessagesSentToEmagizPage {
   async verifyPayload(
     target: string,
     itemId: string,
-    assertions: Array<{ jsonPath: string; expectedValue: string }>
+    assertions: Array<{ path: string; expectedValue: string }>
   ) {
     const headers = (await this.page.getByRole('columnheader').allTextContents()).map(header =>
       header.trim().toLowerCase()
@@ -88,7 +133,7 @@ export class MessagesSentToEmagizPage {
       if (!payloadText) {
         continue;
       }
-      payloads.push(JSON.parse(payloadText));
+      payloads.push(payloadText);
     }
 
     const expectedValue = (value: string) => {
@@ -100,17 +145,40 @@ export class MessagesSentToEmagizPage {
       }
     };
 
+    const parsePayload = (payload: unknown): unknown => {
+      if (typeof payload !== 'string') {
+        return payload;
+      }
+      const trimmed = payload.trim();
+      if (trimmed.startsWith('<')) {
+        return payload;
+      }
+      try {
+        return JSON.parse(trimmed) as unknown;
+      } catch {
+        return payload;
+      }
+    };
+
+    const getValueForAssertion = (payload: unknown, assertion: { path: string }) => {
+      const parsedPayload = parsePayload(payload);
+      if (typeof parsedPayload === 'string' && parsedPayload.trim().startsWith('<')) {
+        return getXmlValue(parsedPayload, assertion.path);
+      }
+      return getJsonPathValue(parsedPayload, assertion.path);
+    };
+
     const matchingPayload = payloads.find(payload =>
       assertions.every(
         assertion =>
-          JSON.stringify(getJsonPathValue(payload, assertion.jsonPath)) ===
+          JSON.stringify(getValueForAssertion(payload, assertion)) ===
           JSON.stringify(expectedValue(assertion.expectedValue))
       )
     );
 
     expect(
       matchingPayload,
-      `No payload for target ${target} matched the expected JSON paths and values.`
+      `No payload for target ${target} matched the expected paths and values.`
     ).toBeDefined();
   }
 }
