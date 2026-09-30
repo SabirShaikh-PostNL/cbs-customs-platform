@@ -7,6 +7,23 @@ import { generateRandomNumber, generateS10Barcode } from '@/utils/generate-item-
 
 const { When, Then } = createBdd(testWithPages);
 
+function getPayloadAssertions(table: DataTable, receptacleId?: string) {
+  return table.hashes().map(row => {
+    let expectedValue = row['Expected value'];
+    if (expectedValue === 'Generated ReceptacleId') {
+      if (!receptacleId) {
+        throw new Error('No generated ReceptacleId is available for this scenario.');
+      }
+      expectedValue = receptacleId;
+    }
+
+    return {
+      path: row['JSON path'] ?? row['XPath'],
+      expectedValue,
+    };
+  });
+}
+
 When(
   'I send an ITMATT message with:',
   async ({ request, messageContext, bddTestInfo, specialsCriteriaPage }, table: DataTable) => {
@@ -31,7 +48,9 @@ When(
           })[character] ?? character
       );
 
-    const itemId = generateS10Barcode(required('ItemIdPrefix'), required('ItemIdSuffix'));
+    const itemId =
+      messageContext.itemId ??
+      generateS10Barcode(required('ItemIdPrefix'), required('ItemIdSuffix'));
     const xmlPayload = `<?xml version="1.0" encoding="UTF-8"?>
 <Item><ItemId>${itemId}</ItemId><TotalWeight>${escapeXml(required('TotalWeight'))}</TotalWeight><MailClass>${escapeXml(required('MailClass'))}</MailClass><Gift>${escapeXml(required('Gift'))}</Gift><TransportCosts>${escapeXml(required('TransportCosts'))}</TransportCosts><TransportCurrency>${escapeXml(required('TransportCurrency'))}</TransportCurrency><OriginCountry>${escapeXml(required('OriginCountry'))}</OriginCountry><ContentPiece><HSCode>${escapeXml(required('ContentPieceHSCode'))}</HSCode><Weight>${escapeXml(required('ContentPieceWeight'))}</Weight><NumberOfPieces>${escapeXml(required('ContentPieceNumberOfPieces'))}</NumberOfPieces><Value>${escapeXml(required('ContentPieceValue'))}</Value><Currency>${escapeXml(required('ContentPieceCurrency'))}</Currency><OriginCountry>${escapeXml(required('ContentPieceOriginCountry'))}</OriginCountry><Description>${escapeXml(required('ContentPieceDescription'))}</Description></ContentPiece><ReceiverAddress><Name>${escapeXml(required('ReceiverName'))}</Name><Street>${escapeXml(required('ReceiverStreet'))}</Street><HouseNumber>${escapeXml(required('ReceiverHouseNumber'))}</HouseNumber><HouseNumberAddition>${escapeXml(required('ReceiverHouseNumberAddition'))}</HouseNumberAddition><PostCode>${escapeXml(required('ReceiverPostCode'))}</PostCode><City>${escapeXml(required('ReceiverCity'))}</City><Country>${escapeXml(required('ReceiverCountry'))}</Country></ReceiverAddress><ReceiverContactInformation><Telephone>${escapeXml(required('ReceiverTelephone'))}</Telephone><Email>${escapeXml(required('ReceiverEmail'))}</Email></ReceiverContactInformation><SenderAddress><Name>${escapeXml(required('SenderName'))}</Name><StreetAndNumber>${escapeXml(required('SenderStreetAndNumber'))}</StreetAndNumber><PostCode>${escapeXml(required('SenderPostCode'))}</PostCode><City>${escapeXml(required('SenderCity'))}</City><Country>${escapeXml(required('SenderCountry'))}</Country></SenderAddress><SenderContactInformation><Telephone>${escapeXml(required('SenderTelephone'))}</Telephone><Email>${escapeXml(required('SenderEmail'))}</Email></SenderContactInformation></Item>`;
     const optional = (name: string): string => data[name] ?? '';
@@ -104,14 +123,19 @@ When(
 
     const itemIds = Array.from({ length: itemCount }, (_, index) => {
       const itemNumber = index + 1;
+      if (index === 0 && messageContext.itemId) {
+        return messageContext.itemId;
+      }
+
       return generateS10Barcode(
         required(`Item${itemNumber}IdPrefix`),
         required(`Item${itemNumber}IdSuffix`)
       );
     });
+    const receptacleId = `${required('PREDESPREFIX')}${generateRandomNumber(14)}`;
     const payload = {
       PWS_Receptacle: {
-        ReceptacleId: `${required('PREDESPREFIX')}${generateRandomNumber(14)}`,
+        ReceptacleId: receptacleId,
         Item: itemIds.map(itemId => ({ ItemId: itemId })),
       },
     };
@@ -129,6 +153,7 @@ When(
 
     messageContext.itemId = itemIds[0];
     messageContext.predesItemIds = itemIds;
+    messageContext.receptacleId = receptacleId;
     messageContext.responseStatus = response.status();
     messageContext.responseBody = responseBody;
   }
@@ -207,11 +232,29 @@ Then(
     if (!messageContext.itemId) {
       throw new Error('No generated item is available for this scenario.');
     }
-    const assertions = table.hashes().map(row => ({
-      path: row['JSON path'] ?? row['XPath'],
-      expectedValue: row['Expected value'],
-    }));
+    const assertions = getPayloadAssertions(table, messageContext.receptacleId);
     await messagesSentToEmagizPage.verifyPayload(target, messageContext.itemId, assertions);
+  }
+);
+
+Then(
+  'the eMagiz payload for target {string} at row {int} matches:',
+  async (
+    { messageContext, messagesSentToEmagizPage },
+    target: string,
+    rowNumber: number,
+    table: DataTable
+  ) => {
+    if (!messageContext.itemId) {
+      throw new Error('No generated item is available for this scenario.');
+    }
+    const assertions = getPayloadAssertions(table, messageContext.receptacleId);
+    await messagesSentToEmagizPage.verifyPayload(
+      target,
+      messageContext.itemId,
+      assertions,
+      rowNumber
+    );
   }
 );
 

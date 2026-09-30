@@ -12,6 +12,7 @@ import { LoginPage } from '@/pages/login-page';
 import { MessagesSentToEmagizPage } from '@/pages/messages-sent-to-emagiz-page';
 import { ProcessedRequestsPage } from '@/pages/processed-requests-page';
 import { SpecialsCriteriaPage } from '@/pages/specials-criteria-page';
+import { SpecialsHandlingPage } from '@/pages/specials-handling-page';
 
 interface PageFixtures {
   dataCompletionPage: DataCompletionPage;
@@ -20,6 +21,7 @@ interface PageFixtures {
   messagesSentToEmagizPage: MessagesSentToEmagizPage;
   processedRequestsPage: ProcessedRequestsPage;
   specialsCriteriaPage: SpecialsCriteriaPage;
+  specialsHandlingPage: SpecialsHandlingPage;
   messageContext: MessageContext;
   bddTestInfo: TestInfo;
 }
@@ -34,6 +36,7 @@ export interface MessageContext {
     senderOrReceiver: 'Sender' | 'Receiver';
   };
   predesItemIds?: string[];
+  receptacleId?: string;
   responseStatus?: number;
   responseBody?: string;
 }
@@ -56,6 +59,9 @@ export const testWithPages = test.extend<PageFixtures>({
   },
   specialsCriteriaPage: async ({ page }, use) => {
     await use(new SpecialsCriteriaPage(page));
+  },
+  specialsHandlingPage: async ({ page }, use) => {
+    await use(new SpecialsHandlingPage(page));
   },
   messageContext: async ({ page }, use) => {
     void page;

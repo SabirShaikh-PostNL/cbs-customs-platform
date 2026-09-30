@@ -136,10 +136,10 @@ Scenario: Validate Specials sorting by blacklisted receiver address
         | ReceiverName                | Blacklisted Name       |
         | ReceiverCompanyName         | Blacklisted Receiver Company |
         | ReceiverStreet              | Loire                  |
-        | ReceiverHouseNumber         | 1                      |
+        | ReceiverHouseNumber         | 237                      |
         | ReceiverHouseNumberAddition |                        |
-        | ReceiverPostCode            | 2491 AN                |
-        | ReceiverCity                | Den Haag               |
+        | ReceiverPostCode            | 3562 KH                |
+        | ReceiverCity                | Utrecht               |
         | ReceiverCountry             | NL                     |
         | ReceiverTelephone           | 3165738957             |
         | ReceiverEmail               | testreceiver@email.com |

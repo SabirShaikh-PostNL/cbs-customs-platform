@@ -1,5 +1,8 @@
-import { Page, expect } from '@playwright/test';
+import { Locator, Page, expect } from '@playwright/test';
 import { MoasNavigation } from '@/pages/moas-navigation';
+
+const normalizeActionLabel = (label: string) =>
+  label.replace(/['"`]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
 
 export class DataCompletionPage {
   private readonly addressFieldNames = [
@@ -18,8 +21,11 @@ export class DataCompletionPage {
   }
 
   async navigateToDataCompletion() {
-    await this.navigation.navigateToSubmenu('Functions', 'Data Completion');
-    await expect(this.page.getByRole('heading', { name: 'Data completion', exact: true })).toBeVisible();
+    const itemIdField = this.page.locator('input[id*="SelectItem"]:visible').first();
+    if (!(await itemIdField.isVisible())) {
+      await this.navigation.navigateToSubmenu('Functions', 'Data Completion', itemIdField);
+    }
+    await expect(itemIdField).toBeVisible();
   }
 
   async searchByItemId(itemId: string) {
@@ -59,14 +65,52 @@ export class DataCompletionPage {
   }
 
   async selectItemAction(action: string) {
-    const actionSelect = this.page
-      .locator('select')
-      .filter({ has: this.page.locator('option', { hasText: action }) })
-      .first();
+    const matchingOptions: { select: Locator; value: string; exact: boolean }[] = [];
+    const expectedAction = normalizeActionLabel(action);
 
-    await expect(actionSelect).toBeVisible({ timeout: 15000 });
-    await actionSelect.selectOption({ label: action });
-    await expect(actionSelect).toHaveValue(/.+/);
+    await expect
+      .poll(
+        async () => {
+          matchingOptions.length = 0;
+          const selects = await this.page.locator('select:visible:enabled').all();
+
+          for (const select of selects) {
+            const options = await select.locator('option:enabled').all();
+            for (const option of options) {
+              const label =
+                (await option.getAttribute('label')) ?? (await option.textContent()) ?? '';
+              const normalizedLabel = normalizeActionLabel(label);
+              if (normalizedLabel.includes(expectedAction)) {
+                const value = await option.getAttribute('value');
+                matchingOptions.push({
+                  select,
+                  value: value ?? label.trim(),
+                  exact: normalizedLabel === expectedAction,
+                });
+              }
+            }
+          }
+
+          return matchingOptions.length > 0;
+        },
+        {
+          timeout: 15000,
+          message: `Action "${action}" should be available in a visible, enabled dropdown`,
+        }
+      )
+      .toBe(true);
+
+    const exactMatches = matchingOptions.filter(option => option.exact);
+    const candidates = exactMatches.length > 0 ? exactMatches : matchingOptions;
+    if (candidates.length > 1) {
+      throw new Error(
+        `Action "${action}" matched multiple dropdown options; use a more specific action label.`
+      );
+    }
+
+    const match = candidates[0];
+    await match.select.selectOption({ value: match.value });
+    await expect(match.select).toHaveValue(match.value);
   }
 
   async clickActionButton(buttonName: string) {

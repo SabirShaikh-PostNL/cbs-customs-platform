@@ -55,10 +55,11 @@ export class MessagesSentToEmagizPage {
   }
 
   async navigateToMessagesSentToEmagiz() {
-    await this.navigation.navigateToSubmenu('Testing', 'Messages sent to eMagiz');
-    await expect(
+    await this.navigation.navigateToSubmenu(
+      'Testing',
+      'Messages sent to eMagiz',
       this.page.getByRole('heading', { name: 'Messages sent to eMagiz', exact: true })
-    ).toBeVisible();
+    );
   }
 
   async searchByItemId(itemId: string) {
@@ -110,7 +111,8 @@ export class MessagesSentToEmagizPage {
   async verifyPayload(
     target: string,
     itemId: string,
-    assertions: Array<{ path: string; expectedValue: string }>
+    assertions: Array<{ path: string; expectedValue: string }>,
+    rowNumber?: number
   ) {
     const headers = (await this.page.getByRole('columnheader').allTextContents()).map(header =>
       header.trim().toLowerCase()
@@ -122,8 +124,31 @@ export class MessagesSentToEmagizPage {
     }
 
     const rows = await this.page.getByRole('row').filter({ hasText: itemId }).all();
-    const payloads: unknown[] = [];
-    for (const row of rows) {
+    let rowsToVerify = rows;
+    if (rowNumber !== undefined) {
+      if (!Number.isInteger(rowNumber) || rowNumber < 1) {
+        throw new Error(`Message row number must be a positive integer: ${rowNumber}`);
+      }
+
+      const selectedRow = rows[rowNumber - 1];
+      if (!selectedRow) {
+        throw new Error(
+          `Message row ${rowNumber} was not found for item ${itemId}; found ${rows.length} message row(s).`
+        );
+      }
+
+      const selectedTarget = (
+        await selectedRow.getByRole('cell').nth(targetIndex).innerText()
+      ).trim();
+      expect(
+        selectedTarget,
+        `Message row ${rowNumber} for item ${itemId} has target ${selectedTarget}, not ${target}.`
+      ).toBe(target);
+      rowsToVerify = [selectedRow];
+    }
+
+    const payloads: Array<{ rowNumber: number; payload: unknown }> = [];
+    for (const row of rowsToVerify) {
       const cells = row.getByRole('cell');
       if ((await cells.nth(targetIndex).innerText()).trim() !== target) {
         continue;
@@ -133,7 +158,10 @@ export class MessagesSentToEmagizPage {
       if (!payloadText) {
         continue;
       }
-      payloads.push(payloadText);
+      payloads.push({
+        rowNumber: rowNumber ?? rows.indexOf(row) + 1,
+        payload: payloadText,
+      });
     }
 
     const expectedValue = (value: string) => {
@@ -168,17 +196,35 @@ export class MessagesSentToEmagizPage {
       return getJsonPathValue(parsedPayload, assertion.path);
     };
 
-    const matchingPayload = payloads.find(payload =>
-      assertions.every(
-        assertion =>
-          JSON.stringify(getValueForAssertion(payload, assertion)) ===
-          JSON.stringify(expectedValue(assertion.expectedValue))
-      )
-    );
+    const formatValue = (value: unknown) =>
+      value === undefined ? '<missing>' : JSON.stringify(value);
+    const payloadResults = payloads.map(({ rowNumber: actualRowNumber, payload }) => {
+      const mismatches = assertions.flatMap(assertion => {
+        const expected = expectedValue(assertion.expectedValue);
+        const actual = getValueForAssertion(payload, assertion);
+        return JSON.stringify(actual) === JSON.stringify(expected)
+          ? []
+          : [
+              `  ${assertion.path}: expected ${formatValue(expected)}, actual ${formatValue(actual)}`,
+            ];
+      });
+
+      return { rowNumber: actualRowNumber, mismatches };
+    });
+    const matchingPayload = payloadResults.find(result => result.mismatches.length === 0);
+    const mismatchDetails =
+      payloadResults.length === 0
+        ? `No payload rows for target ${target} were found for item ${itemId}.`
+        : payloadResults
+            .map(
+              result =>
+                `Row ${result.rowNumber}:\n${result.mismatches.join('\n') || '  All assertions matched.'}`
+            )
+            .join('\n');
 
     expect(
       matchingPayload,
-      `No payload for target ${target} matched the expected paths and values.`
+      `No payload for target ${target} matched the expected paths and values.\n${mismatchDetails}`
     ).toBeDefined();
   }
 }

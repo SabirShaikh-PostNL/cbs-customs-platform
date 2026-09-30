@@ -16,10 +16,11 @@ export class SpecialsCriteriaPage {
   }
 
   async navigateToSpecialsCriteria() {
-    await this.navigation.navigateToMenuItem('Settings');
-    await this.navigation.navigateToMenuItem('Specials Criteria');
-
-    await expect(this.page.getByText("Criteria for 'Special goods'")).toBeVisible();
+    await this.navigation.navigateToSubmenu(
+      'Settings',
+      'Specials Criteria',
+      this.page.getByText("Criteria for 'Special goods'")
+    );
   }
 
   async addHsCodeCriterion(criterion: string, description: string) {
