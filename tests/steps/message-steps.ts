@@ -180,6 +180,23 @@ When(
   }
 );
 
+When(
+  'I search for the generated item in {string} Items',
+  async ({ kFycoHandlingPage, messageContext }, pageName: string) => {
+    if (!messageContext.itemId) {
+      throw new Error('No generated item is available for this scenario.');
+    }
+    await kFycoHandlingPage.searchByItemId(messageContext.itemId, pageName);
+  }
+);
+
+Then(
+  'I can mark the item as {string}',
+  async ({ kFycoHandlingPage }, action: string) => {
+    await kFycoHandlingPage.markItemAs(action);
+  }
+);
+
 Then(
   'the item has sorting decision {string} and dutiable status {string}',
   async ({ localEntitiesItemsPage }, sortingDecision: string, dutiable: 'Yes' | 'No') => {

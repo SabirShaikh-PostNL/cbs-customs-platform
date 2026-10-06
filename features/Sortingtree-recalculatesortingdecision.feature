@@ -1,10 +1,9 @@
 Feature: Sorting Tree Verification Recalculate Sorting Decision
 
 
-
-# ============================================================================================
+# ============================================================================================================================================================================
 # T091StoreDataAndRecalculateSendToExport-SD024
-# ============================================================================================
+# ============================================================================================================================================================================
   @T091StoreDataAndRecalculateSendToExport-SD024
   Scenario: Validate that the sorting tree recalculates the sorting decision when a new item is added to the shipment
     When I send a PREDES message with:
@@ -88,10 +87,9 @@ Feature: Sorting Tree Verification Recalculate Sorting Decision
       | $.Message.Item.Declaration[0]['DeclarationStatus'][0].Type           | Cleared         |
 
 
-
-# ============================================================================================
+# ============================================================================================================================================================================
 # T091aStoreDataAndRecalculateTransit_Packet-SD025
-# ============================================================================================
+# ============================================================================================================================================================================
   @T091aStoreDataAndRecalculateTransit_Packet-SD025
   Scenario: Validate that the sorting tree recalculates the sorting decision to transit packet
     When I send a PREDES message with:
@@ -172,9 +170,9 @@ Feature: Sorting Tree Verification Recalculate Sorting Decision
       
 
 
-# ============================================================================================
+# ============================================================================================================================================================================
 # T092StoreDataAndRecalculateSendToBVA-SD016
-# ============================================================================================
+# ============================================================================================================================================================================
   @T092StoreDataAndRecalculateSendToBVA-SD016
 Scenario: Validate that the sorting tree recalculates the sorting decision to waiting for BvA response
   When I send a PREDES message with:
@@ -261,9 +259,9 @@ Scenario: Validate that the sorting tree recalculates the sorting decision to wa
 
 
 
-# ============================================================================================
+# ============================================================================================================================================================================
 # T093StoreDataAndRecalculateSendToKFycoFromSD005-SD021
-# ============================================================================================
+# ============================================================================================================================================================================
   @T093StoreDataAndRecalculateSendToKFycoFromSD005-SD021
 Scenario: Validate that the sorting tree recalculates the sorting decision to K-FyCo
   When I send a PREDES message with:
@@ -342,10 +340,9 @@ Scenario: Validate that the sorting tree recalculates the sorting decision to K-
 
 
 
-
-# ============================================================================================
+# ============================================================================================================================================================================
 # T094bStoreDataAndRecalculateSendToKFycoFromSD013-SD021
-# ============================================================================================
+# ============================================================================================================================================================================
 @T094bStoreDataAndRecalculateSendToKFycoFromSD013-SD021
 Scenario: Validate that the sorting tree recalculates the sorting decision to K-FYCO from SD013
 When I send a PREDES message with:
@@ -415,11 +412,9 @@ Then the eMagiz payload for target "nl.postnl.pnlecus.accp.eventupd" at row 2 ma
   | /BvA            | 1200                   |
 
 
-
-
-# ============================================================================================
+# ============================================================================================================================================================================
 # T095StoreDataAndRecalculateSendToNonBVAFromSD016-SD008
-# ============================================================================================
+# ============================================================================================================================================================================
 @T095StoreDataAndRecalculateSendToNonBVAFromSD016-SD008
 Scenario: Validate that the sorting tree recalculates the sorting decision to waiting for BvA response with BvA reason
 When I send a PREDES message with:
@@ -509,9 +504,9 @@ Then the eMagiz payload for target "nl.postnl.pnlecus.accp.eventupd" at row 3 ma
 
 
 
-# ============================================================================================
+# ============================================================================================================================================================================
 # T096StoreDataAndRecalculateDocumentToPNP-SD013
-# ============================================================================================
+# ============================================================================================================================================================================
 @T096StoreDataAndRecalculateDocumentToPNP-SD013
 Scenario: Validate that the sorting tree recalculates the sorting decision to PNP after marking item as Document
 When I send a PREDES message with:
@@ -591,9 +586,9 @@ Then the eMagiz payload for target "nl.postnl.pnlecus.accp.eventupd" at row 2 ma
 
 
 
-# ============================================================================================
+# ============================================================================================================================================================================
 # T097StoreDataAndRecalculateSendToWaitingForCustomsResponseSD009
-# ============================================================================================
+# ============================================================================================================================================================================
 @T097StoreDataAndRecalculateSendToWaitingForCustomsResponseSD009
 Scenario: Validate recalculation from Send to Export (SD005) to Waiting for Customs Response (SD009) for an NL destination item with value below 45 after marking the item as a gift
 When I send a PREDES message with:
@@ -673,14 +668,14 @@ Then the eMagiz payload for target "nl.postnl.pnlecus.accp.dclrtnts" at row 2 ma
 
 
 
-# ============================================================================================
+# ============================================================================================================================================================================
 # T098StoreDataAndRecalculateSendToNonDutiable-SD030orSD008
-# ============================================================================================
+# ============================================================================================================================================================================
 
 
-# ============================================================================================
+# ============================================================================================================================================================================
 # T099StoreDataAndRecalculateSendToSpecials-SD005-SD017
-# ============================================================================================
+# ============================================================================================================================================================================
 
 @T099StoreDataAndRecalculateSendToSpecials-SD005-SD017
 Scenario: Validate recalculation to Specials (SD017) after setting the item to Special
@@ -743,10 +738,9 @@ And I mark the item as no longer special via DC
 Then the Specials handling confirmation says the item has sorting decision "_005"
 And I accept the Specials handling confirmation
 
-
-# ============================================================================================
+# ============================================================================================================================================================================
 # T099aStoreDataAndRecalculateSendFromGiftToNonGiftromSD005-SD009
-# ============================================================================================
+# ============================================================================================================================================================================
 
 @T099aStoreDataAndRecalculateSendFromGiftToNonGiftromSD005-SD009
 Scenario: Validate recalculation from Send to Export (SD005) to Waiting for Customs Response (SD009) after changing an item from Gift to Non Gift

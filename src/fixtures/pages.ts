@@ -7,6 +7,7 @@
 import { TestInfo } from '@playwright/test';
 import { test } from 'playwright-bdd';
 import { DataCompletionPage } from '@/pages/data-completion-page';
+import { KFycoHandlingPage } from '@/pages/k-fyco-handling-page';
 import { LocalEntitiesItemsPage } from '@/pages/local-entities-items-page';
 import { LoginPage } from '@/pages/login-page';
 import { MessagesSentToEmagizPage } from '@/pages/messages-sent-to-emagiz-page';
@@ -16,6 +17,7 @@ import { SpecialsHandlingPage } from '@/pages/specials-handling-page';
 
 interface PageFixtures {
   dataCompletionPage: DataCompletionPage;
+  kFycoHandlingPage: KFycoHandlingPage;
   localEntitiesItemsPage: LocalEntitiesItemsPage;
   loginPage: LoginPage;
   messagesSentToEmagizPage: MessagesSentToEmagizPage;
@@ -44,6 +46,9 @@ export interface MessageContext {
 export const testWithPages = test.extend<PageFixtures>({
   dataCompletionPage: async ({ page }, use) => {
     await use(new DataCompletionPage(page));
+  },
+  kFycoHandlingPage: async ({ page }, use) => {
+    await use(new KFycoHandlingPage(page));
   },
   localEntitiesItemsPage: async ({ page }, use) => {
     await use(new LocalEntitiesItemsPage(page));

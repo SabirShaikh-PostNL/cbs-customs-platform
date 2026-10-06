@@ -1,5 +1,8 @@
 Feature: Specials sorting
 
+# =====================================================================================
+# T060Sorting017-Specials017HSCode
+# =====================================================================================
   @T060Sorting017-Specials017HSCode
   Scenario: Validate Specials sorting by HS code
     When I log in to the MoaS application
@@ -51,7 +54,9 @@ Feature: Specials sorting
     When I navigate to setting Specials Criteria
     And I delete the created criteria
 
-
+# =====================================================================================
+# T061Sorting017-Specials017Keywords
+# =====================================================================================
   @T061Sorting017-Specials017Keywords
   Scenario: Validate Specials sorting by keyword
     When I log in to the MoaS application
@@ -102,7 +107,9 @@ Feature: Specials sorting
     When I navigate to setting Specials Criteria
     And I delete the created Specials Keyword
 
-
+# =====================================================================================
+# T062Sorting017-Specials-BlacklistedReceiverAddresses
+# =====================================================================================
 @T062Sorting017-Specials-BlacklistedReceiverAddresses
 Scenario: Validate Specials sorting by blacklisted receiver address
     When I log in to the MoaS application
@@ -157,7 +164,9 @@ Scenario: Validate Specials sorting by blacklisted receiver address
     When I navigate to setting Specials Criteria
     And I delete the created blacklisted address
 
-
+# =====================================================================================
+# T063Sorting017-Specials-BlacklistedSenderAddresses
+# =====================================================================================
     @T063Sorting017-Specials-BlacklistedSenderAddresses
 Scenario: Validate Specials sorting by blacklisted sender address
     When I log in to the MoaS application
@@ -212,6 +221,9 @@ Scenario: Validate Specials sorting by blacklisted sender address
     When I navigate to setting Specials Criteria
     And I delete the created blacklisted address
 
+# =====================================================================================
+# T064Sorting017-SpecialsTransportValueAbove300EuroTINA
+# =====================================================================================
       @T064Sorting017-SpecialsTransportValueAbove300EuroTINA
   Scenario: Validate Specials sorting when transport costs are above 300 EUR
     When I log in to the MoaS application
@@ -257,7 +269,9 @@ Scenario: Validate Specials sorting by blacklisted sender address
     When I search for the generated item in Local entities Items
     Then the item has sorting decision "017 - Specials" and dutiable status "Yes"
 
-
+# =====================================================================================
+# T065Sorting017-SpecialsTransportValueAbove300EuroRICK
+# =====================================================================================
       @T065Sorting017-SpecialsTransportValueAbove300EuroRICK
   Scenario: Validate Specials sorting when transport costs are above 300 EUR RICK
     When I log in to the MoaS application
@@ -300,11 +314,13 @@ Scenario: Validate Specials sorting by blacklisted sender address
       | SenderTelephone             | 38957389               |
       | SenderEmail                 | testsender@email.com   |
     Then the message API response is successful
-
     When I search for the generated item in Local entities Items
     Then the item has sorting decision "017 - Specials" and dutiable status "Yes"
 
 
+# =====================================================================================
+# T066Sorting017-SpecialsContentPieceTotalWeightAbove30KgRick
+# =====================================================================================
       @T066Sorting017-SpecialsContentPieceTotalWeightAbove30KgRick
   Scenario: Validate Specials sorting when content piece total weight is above 30 KG
     When I log in to the MoaS application
@@ -351,6 +367,9 @@ Scenario: Validate Specials sorting by blacklisted sender address
     Then the item has sorting decision "017 - Specials" and dutiable status "Yes"
 
 
+# =====================================================================================
+# T067Sorting017-SpecialsContentPieceTotalWeightAbove30KgTINA
+# =====================================================================================
  @T067Sorting017-SpecialsContentPieceTotalWeightAbove30KgTINA
 Scenario: Validate Specials sorting when content piece weight is above 30 KG
   When I log in to the MoaS application
@@ -397,6 +416,9 @@ Scenario: Validate Specials sorting when content piece weight is above 30 KG
   Then the item has sorting decision "017 - Specials" and dutiable status "Yes"
 
 
+# =====================================================================================
+# @T068Sorting017-SpecialsTotalWeightAbove30
+# =====================================================================================
     @T068Sorting017-SpecialsTotalWeightAbove30
 Scenario: Validate Specials sorting when total weight is above 30 KG
 When I log in to the MoaS application
